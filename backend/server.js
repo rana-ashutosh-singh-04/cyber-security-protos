@@ -75,6 +75,7 @@ app.get("/", (req, res) => {
 
 app.post("/collect", async (req, res) => {
   try {
+    console.log("Incoming body:", req.body);
     await connectionDB();
     await CollectedData.create(req.body);
     res.json({ message: "Data stored successfully" });
@@ -112,38 +113,50 @@ app.get("/track", async (req, res) => {
 
     let ip =
       req.headers["x-forwarded-for"]?.split(",")[0] ||
-      req.socket.remoteAddress;
-
-    if (ip === "::1" || ip === "127.0.0.1") {
-      ip = "8.8.8.8";
-    }
+      req.socket.remoteAddress ||
+      "8.8.8.8";
 
     ip = ip.replace("::ffff:", "");
 
-    const response = await fetch(`https://ipapi.co/${ip}/json/`);
-    const location = await response.json();
+    let location = {};
+
+    try {
+      const response = await fetch(`https://ipapi.co/${ip}/json/`, {
+        timeout: 5000,
+      });
+
+      const text = await response.text();
+
+      // 👇 Only parse if it is JSON
+      if (text.startsWith("{")) {
+        location = JSON.parse(text);
+      } else {
+        console.warn("IP API non-JSON response:", text);
+      }
+    } catch (apiErr) {
+      console.error("IP API failed:", apiErr);
+    }
 
     await TrackedData.create({
       ip,
-      userAgent: req.headers["user-agent"],
-      time: new Date().toLocaleString("en-IN", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      }),
-      country: location.country_name,
-      region: location.region,
-      city: location.city,
-      latitude: location.latitude,
-      longitude: location.longitude,
-      isp: location.org,
+      userAgent: req.headers["user-agent"] || "unknown",
+      time: new Date().toLocaleString("en-IN"),
+      country: location.country_name || "unknown",
+      region: location.region || "unknown",
+      city: location.city || "unknown",
+      latitude: location.latitude || null,
+      longitude: location.longitude || null,
+      isp: location.org || "unknown",
     });
 
-    res.send("Link opened");
+    // 🔐 NEVER expose errors to user
+    res.status(200).send("Link opened");
   } catch (err) {
-    console.error("Track error:", err);
-    res.status(500).send("Tracking failed");
+    console.error("Track route crashed:", err);
+    res.status(200).send("Link opened");
   }
 });
+
 
 app.get("/tracked/data", async (req, res) => {
   try {
