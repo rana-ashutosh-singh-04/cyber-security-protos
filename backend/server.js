@@ -121,5 +121,8 @@ app.get("/tracked/data", async (req, res) => {
 });
 
 
-/* Server */
-
+/* SERVER START (RENDER REQUIRES THIS) */
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log("Server running on port", PORT);
+});
