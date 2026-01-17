@@ -122,7 +122,4 @@ app.get("/tracked/data", async (req, res) => {
 
 
 /* Server */
-const PORT = production.env.PORT;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+

