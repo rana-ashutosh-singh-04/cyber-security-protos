@@ -5,6 +5,7 @@ const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
+app.set("trust proxy", true);
 
 /* Middleware */
 app.use(cors());
@@ -121,41 +122,41 @@ app.get("/track", async (req, res) => {
     let location = {};
 
     try {
-      const response = await fetch(`https://ipapi.co/${ip}/json/`, {
-        timeout: 5000,
-      });
+      const response = await fetch(`https://ipwho.is/${ip}`);
+      const data = await response.json();
 
-      const text = await response.text();
-
-      // 👇 Only parse if it is JSON
-      if (text.startsWith("{")) {
-        location = JSON.parse(text);
+      if (data.success) {
+        location = data;
       } else {
-        console.warn("IP API non-JSON response:", text);
+        console.warn("IP lookup failed:", data.message);
       }
     } catch (apiErr) {
-      console.error("IP API failed:", apiErr);
+      console.error("IP API failed:", apiErr.message);
     }
 
     await TrackedData.create({
       ip,
       userAgent: req.headers["user-agent"] || "unknown",
       time: new Date().toLocaleString("en-IN"),
-      country: location.country_name || "unknown",
+
+      country: location.country || "unknown",
       region: location.region || "unknown",
       city: location.city || "unknown",
-      latitude: location.latitude || null,
-      longitude: location.longitude || null,
-      isp: location.org || "unknown",
+
+      latitude: location.latitude ?? null,
+      longitude: location.longitude ?? null,
+
+      isp: location.isp || "unknown",
     });
 
-    // 🔐 NEVER expose errors to user
+    // 🔐 Always return success
     res.status(200).send("Link opened");
   } catch (err) {
     console.error("Track route crashed:", err);
     res.status(200).send("Link opened");
   }
 });
+
 
 
 app.get("/tracked/data", async (req, res) => {
