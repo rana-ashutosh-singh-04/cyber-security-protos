@@ -169,6 +169,22 @@ app.get("/tracked/data", async (req, res) => {
   }
 });
 
+app.delete("/tracked/data/delete",async (req,res)=> {
+  try{
+    await connectionDB();
+    const result = await TrackedData.deleteMany({});
+    res.json({message: `Deleted ${result.deletedCount} records`});
+  }catch(err){
+    console.error("data not deleted", err);
+    res.status(500).json({ message: "Failed to delete tracked data" });
+  }
+})
+
+app.use((req, res) => {
+  res.status(404).json({ message: "Route not found" });
+});
+
+
 /* =======================
    Server Start (Render)
 ======================= */
