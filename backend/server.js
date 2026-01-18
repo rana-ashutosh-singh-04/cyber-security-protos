@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const fetch = require("node-fetch");
 
 require("dotenv").config();
 
@@ -9,7 +10,11 @@ app.set("trust proxy", true);
 
 /* Middleware */
 app.use(cors());
-app.use(express.json({ limit: "10mb" }));
+app.use(express.json({ limit: "15mb" }));
+app.use(express.urlencoded({
+  extended: true,
+  limit: "15mb"
+}));
 
 /* =======================
    MongoDB Connection
@@ -55,9 +60,7 @@ const trackerSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-/* =======================
-   Models (SAFE)
-======================= */
+
 const CollectedData =
   mongoose.models.CollectedData ||
   mongoose.model("CollectedData", dataSchema);
@@ -66,18 +69,14 @@ const TrackedData =
   mongoose.models.TrackedData ||
   mongoose.model("TrackedData", trackerSchema);
 
-/* =======================
-   Routes
-======================= */
-
 app.get("/", (req, res) => {
   res.send("Backend is running 🚀");
 });
 
 app.post("/collect", async (req, res) => {
   try {
-    console.log("Incoming body:", req.body);
     await connectionDB();
+    console.log("Incoming body:", req.body);
     await CollectedData.create(req.body);
     res.json({ message: "Data stored successfully" });
   } catch (err) {
@@ -113,7 +112,7 @@ app.get("/track", async (req, res) => {
     await connectionDB();
 
     let ip = getPublicIP(req) || "8.8.8.8";
-    
+
     ip = ip.replace("::ffff:", "");
 
     let location = {};
