@@ -112,11 +112,8 @@ app.get("/track", async (req, res) => {
   try {
     await connectionDB();
 
-    let ip =
-      req.headers["x-forwarded-for"]?.split(",")[0] ||
-      req.socket.remoteAddress ||
-      "8.8.8.8";
-
+    let ip = getPublicIP(req) || "8.8.8.8";
+    
     ip = ip.replace("::ffff:", "");
 
     let location = {};
@@ -157,6 +154,27 @@ app.get("/track", async (req, res) => {
   }
 });
 
+function getPublicIP(req) {
+  const forwarded = req.headers["x-forwarded-for"];
+  let ip = forwarded ? forwarded.split(",")[0].trim() : req.socket.remoteAddress;
+
+  if (!ip) return null;
+
+  ip = ip.replace("::ffff:", "");
+
+  // block private & localhost IPs
+  const blocked = [
+    /^127\./,
+    /^10\./,
+    /^192\.168\./,
+    /^172\.(1[6-9]|2\d|3[0-1])\./,
+    /^::1$/,
+  ];
+
+  if (blocked.some((r) => r.test(ip))) return null;
+
+  return ip;
+}
 
 
 app.get("/tracked/data", async (req, res) => {
